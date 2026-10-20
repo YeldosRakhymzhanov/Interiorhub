@@ -1,0 +1,10 @@
+
+DELETE http://localhost:8080/api/projects/1
+
+###
+
+DELETE http://localhost:8080/api/projects/3
+
+###
+
+DELETE http://localhost:8080/api/projects/4

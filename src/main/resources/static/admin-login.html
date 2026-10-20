@@ -1,0 +1,85 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Вход в InteriorHub</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<main class="admin-login">
+  <section class="admin-login-card">
+    <h1>InteriorHub</h1>
+    <p>Вход в панель управления</p>
+
+    <form action="/admin/login" method="post">
+      <input
+              type="text"
+              name="username"
+              placeholder="Имя пользователя"
+              autocomplete="username"
+              required
+      >
+
+      <input
+              type="password"
+              name="password"
+              placeholder="Пароль"
+              autocomplete="current-password"
+              required
+      >
+
+      <input type="hidden" name="_csrf" value="">
+
+      <button type="submit">Войти</button>
+    </form>
+  </section>
+</main>
+
+<script>
+  fetch("/csrf")
+          .then(response => {
+            if (!response.ok) {
+              throw new Error("Не удалось получить CSRF-токен");
+            }
+            return response.json();
+          })
+          .then(data => {
+            document.querySelector('input[name="_csrf"]').value =
+                    data.token;
+          })
+          .catch(error => {
+            console.error(error);
+            alert("Не удалось подготовить форму входа. Обновите страницу.");
+          });
+</script>
+
+
+<script>
+  const form = document.querySelector("form");
+  const csrfInput = document.querySelector('input[name="_csrf"]');
+  const submitButton = form.querySelector('button[type="submit"]');
+
+  submitButton.disabled = true;
+
+  fetch("/csrf")
+          .then(response => {
+            if (!response.ok) {
+              throw new Error("Не удалось получить CSRF-токен");
+            }
+            return response.json();
+          })
+          .then(data => {
+            csrfInput.value = data.token;
+            submitButton.disabled = false;
+          })
+          .catch(error => {
+            console.error(error);
+            alert("Не удалось подготовить форму входа. Обнови страницу.");
+          });
+</script>
+</body>
+</html>
+
+

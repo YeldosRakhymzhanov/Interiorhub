@@ -1,0 +1,351 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InteriorHub — Админ-панель</title>
+    <style>
+        body {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+            font-family: Arial, sans-serif;
+            color: #333;
+        }
+
+        h1 {
+            margin-bottom: 8px;
+        }
+
+        .project {
+            margin-top: 16px;
+            padding: 18px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .project h3 {
+            margin-top: 0;
+        }
+
+        .status {
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+<h1>InteriorHub — Админ-панель</h1>
+<p>Управление проектами интерьера</p>
+
+<h2>Добавить проект</h2>
+
+<form id="project-form">
+    <p>
+        <label for="title">Название проекта</label><br>
+        <input id="title" name="title" required>
+    </p>
+
+    <p>
+        <label for="description">Описание</label><br>
+        <textarea id="description" name="description" rows="4" required></textarea>
+    </p>
+
+    <p>
+        <label for="area">Площадь (м²)</label><br>
+        <input id="area" name="area" type="number" min="0.1" step="0.1">
+    </p>
+
+    <p>
+        <label for="style">Стиль интерьера</label><br>
+        <input id="style" name="style">
+    </p>
+
+    <button type="submit">Добавить проект</button>
+</form>
+
+<p id="form-message" role="status"></p>
+
+<hr>
+
+
+<section id="edit-section" hidden>
+    <h2>Редактировать проект</h2>
+
+    <form id="edit-form">
+        <input type="hidden" id="edit-id">
+
+        <p>
+            <label for="edit-title">Название</label><br>
+            <input id="edit-title" required>
+        </p>
+
+        <p>
+            <label for="edit-description">Описание</label><br>
+            <textarea id="edit-description" rows="4" required></textarea>
+        </p>
+
+        <p>
+            <label for="edit-area">Площадь (м²)</label><br>
+            <input id="edit-area" type="number" min="0.1" step="0.1">
+        </p>
+
+        <p>
+            <label for="edit-style">Стиль интерьера</label><br>
+            <input id="edit-style">
+        </p>
+
+        <button type="submit">Сохранить изменения</button>
+        <button type="button" id="cancel-edit">Отмена</button>
+    </form>
+
+    <p id="edit-message" role="status"></p>
+</section>
+
+<h2>Мои проекты</h2>
+
+<div id="project-list" class="status">Загрузка проектов...</div>
+
+<script>
+
+    async function loadProjects() {
+        const projectList = document.getElementById("project-list");
+
+        try {
+            const response = await fetch("/api/projects");
+
+            if (!response.ok) {
+                throw new Error("Не удалось загрузить проекты");
+            }
+
+            const projects = await response.json();
+            projectList.replaceChildren();
+
+            if (projects.length === 0) {
+                projectList.textContent = "Пока нет проектов.";
+                return;
+            }
+
+            projects.forEach(project => {
+                const card = document.createElement("div");
+                card.className = "project";
+
+                const title = document.createElement("h3");
+                title.textContent = project.title || "Без названия";
+
+                const description = document.createElement("p");
+                description.textContent =
+                    project.description || "Нет описания";
+
+                const area = document.createElement("p");
+                area.textContent = project.area != null
+                    ? `Площадь: ${project.area} м²`
+                    : "Площадь не указана";
+
+
+                const editButton = document.createElement("button");
+                editButton.type = "button";
+                editButton.textContent = "Редактировать";
+
+                editButton.addEventListener("click", () => {
+                    document.getElementById("edit-id").value = project.id;
+                    document.getElementById("edit-title").value = project.title || "";
+                    document.getElementById("edit-description").value =
+                        project.description || "";
+                    document.getElementById("edit-area").value =
+                        project.area ?? "";
+                    document.getElementById("edit-style").value =
+                        project.style || "";
+
+                    document.getElementById("edit-message").textContent = "";
+                    document.getElementById("edit-section").hidden = false;
+
+                    document.getElementById("edit-section").scrollIntoView({
+                        behavior: "smooth",
+                        block: "start"
+                    });
+                });
+
+                const deleteButton = document.createElement("button");
+                deleteButton.type = "button";
+                deleteButton.textContent = "Удалить проект";
+
+                deleteButton.addEventListener("click", async () => {
+                    const confirmed = confirm(
+                        `Ты действительно хочешь удалить проект «${project.title}»?`
+                    );
+
+                    if (!confirmed) {
+                        return;
+                    }
+
+                    deleteButton.disabled = true;
+
+                    try {
+                        const csrfResponse = await fetch("/csrf");
+
+                        if (!csrfResponse.ok) {
+                            throw new Error("Не удалось получить CSRF-токен");
+                        }
+
+                        const csrf = await csrfResponse.json();
+
+                        const deleteResponse = await fetch(
+                            `/api/projects/${project.id}`,
+                            {
+                                method: "DELETE",
+                                headers: {
+                                    [csrf.headerName]: csrf.token
+                                }
+                            }
+                        );
+
+                        if (!deleteResponse.ok) {
+                            throw new Error(
+                                `Не удалось удалить проект. Код: ${deleteResponse.status}`
+                            );
+                        }
+
+                        await loadProjects();
+
+                    } catch (error) {
+                        console.error(error);
+                        alert(error.message);
+                        deleteButton.disabled = false;
+                    }
+                });
+
+                card.append(title, description, area, editButton, deleteButton);
+                projectList.appendChild(card);
+            });
+
+        } catch (error) {
+            projectList.textContent =
+                "Ошибка загрузки. Проверь вход и доступ к API.";
+            console.error(error);
+        }
+    }
+
+
+    loadProjects();
+
+
+    const projectForm = document.getElementById("project-form");
+    const formMessage = document.getElementById("form-message");
+
+    projectForm.addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        formMessage.textContent = "Сохранение проекта...";
+
+        try {
+            const csrfResponse = await fetch("/csrf");
+
+            if (!csrfResponse.ok) {
+                throw new Error("Не удалось получить CSRF-токен");
+            }
+
+            const csrf = await csrfResponse.json();
+
+            const project = {
+                title: document.getElementById("title").value.trim(),
+                description: document.getElementById("description").value.trim(),
+                area: document.getElementById("area").value
+                    ? Number(document.getElementById("area").value)
+                    : null,
+                style: document.getElementById("style").value.trim()
+            };
+
+            const response = await fetch("/api/projects", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    [csrf.headerName]: csrf.token
+                },
+                body: JSON.stringify(project)
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(
+                    `Ошибка сервера (${response.status}): ${errorText}`
+                );
+            }
+
+            projectForm.reset();
+            formMessage.textContent = "Проект успешно добавлен!";
+            await loadProjects();
+
+        } catch (error) {
+            console.error(error);
+            formMessage.textContent = error.message;
+        }
+    });
+
+
+    const editForm = document.getElementById("edit-form");
+    const editSection = document.getElementById("edit-section");
+    const editMessage = document.getElementById("edit-message");
+
+    document.getElementById("cancel-edit").addEventListener("click", () => {
+        editForm.reset();
+        editSection.hidden = true;
+        editMessage.textContent = "";
+    });
+
+    editForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const id = document.getElementById("edit-id").value;
+
+        const project = {
+            title: document.getElementById("edit-title").value.trim(),
+            description: document.getElementById("edit-description").value.trim(),
+            area: document.getElementById("edit-area").value
+                ? Number(document.getElementById("edit-area").value)
+                : null,
+            style: document.getElementById("edit-style").value.trim()
+        };
+
+        editMessage.textContent = "Сохранение изменений...";
+
+        try {
+            const csrfResponse = await fetch("/csrf");
+
+            if (!csrfResponse.ok) {
+                throw new Error("Не удалось получить CSRF-токен");
+            }
+
+            const csrf = await csrfResponse.json();
+
+            const response = await fetch(`/api/projects/${id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    [csrf.headerName]: csrf.token
+                },
+                body: JSON.stringify(project)
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(
+                    `Ошибка сохранения (${response.status}): ${errorText}`
+                );
+            }
+
+            editMessage.textContent = "Изменения сохранены!";
+            editForm.reset();
+            editSection.hidden = true;
+
+            await loadProjects();
+
+        } catch (error) {
+            console.error(error);
+            editMessage.textContent = error.message;
+        }
+    });
+
+</script>
+</body>
+</html>

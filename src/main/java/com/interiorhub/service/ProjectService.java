@@ -6,6 +6,9 @@ import org.springframework.stereotype.Service;
 import com.interiorhub.dto.ProjectRequest;
 import com.interiorhub.dto.ProjectResponse;
 import com.interiorhub.exception.ProjectNotFoundException;
+import com.interiorhub.repository.ProjectTranslationRepository;
+import com.interiorhub.repository.ProjectImageRepository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -13,9 +16,17 @@ import java.util.List;
 public class ProjectService {
 
     private final ProjectRepository projectRepository;
+    private final ProjectTranslationRepository projectTranslationRepository;
+    private final ProjectImageRepository projectImageRepository;
 
-    public ProjectService(ProjectRepository projectRepository) {
+    public ProjectService(
+            ProjectRepository projectRepository,
+            ProjectTranslationRepository projectTranslationRepository,
+            ProjectImageRepository projectImageRepository
+    ) {
         this.projectRepository = projectRepository;
+        this.projectTranslationRepository = projectTranslationRepository;
+        this.projectImageRepository = projectImageRepository;
     }
 
     public List<Project> getAllProjects() {
@@ -89,9 +100,13 @@ public class ProjectService {
     }
 
 
+    @Transactional
     public void deleteProject(Long id) {
         Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new ProjectNotFoundException(id));
+
+        projectTranslationRepository.deleteByProjectId(id);
+        projectImageRepository.deleteByProjectId(id);
 
         projectRepository.delete(project);
     }
