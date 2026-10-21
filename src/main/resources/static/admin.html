@@ -1,39 +1,13 @@
-
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>InteriorHub — Админ-панель</title>
-    <style>
-        body {
-            max-width: 1000px;
-            margin: 40px auto;
-            padding: 0 20px;
-            font-family: Arial, sans-serif;
-            color: #333;
-        }
-
-        h1 {
-            margin-bottom: 8px;
-        }
-
-        .project {
-            margin-top: 16px;
-            padding: 18px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-        }
-
-        .project h3 {
-            margin-top: 0;
-        }
-
-        .status {
-            color: #666;
-        }
-    </style>
+    <link rel="stylesheet" href="/css/admin.css">
 </head>
+
 <body>
 <h1>InteriorHub — Админ-панель</h1>
 <p>Управление проектами интерьера</p>
@@ -106,6 +80,51 @@
 
 <div id="project-list" class="status">Загрузка проектов...</div>
 
+
+<hr>
+
+<section id="image-upload-section">
+    <h2>Изображения проекта</h2>
+    <p>Выбери проект и добавь фотографии или планы интерьера.</p>
+
+    <form id="image-upload-form">
+        <p>
+            <label for="image-project-id">Проект</label>
+            <select id="image-project-id" required>
+                <option value="">Выбери проект</option>
+            </select>
+        </p>
+
+        <p>
+            <label for="project-images">Изображения</label>
+            <input
+                    type="file"
+                    id="project-images"
+                    accept="image/jpeg,image/png,image/webp"
+                    multiple
+                    required
+            >
+        </p>
+
+        <p>
+            <label for="image-display-order">Начальный порядок</label>
+            <input
+                    type="number"
+                    id="image-display-order"
+                    min="1"
+                    value="1"
+                    required
+            >
+        </p>
+
+        <button type="submit">Загрузить изображения</button>
+        <p id="image-upload-message" role="status"></p>
+    </form>
+
+    <div id="uploaded-images"></div>
+</section>
+
+
 <script>
 
     async function loadProjects() {
@@ -119,6 +138,28 @@
             }
 
             const projects = await response.json();
+
+            const imageProjectSelect = document.getElementById("image-project-id");
+            const previousProjectId = imageProjectSelect.value;
+
+            imageProjectSelect.replaceChildren();
+
+            const placeholder = document.createElement("option");
+            placeholder.value = "";
+            placeholder.textContent = "Выбери проект";
+            imageProjectSelect.appendChild(placeholder);
+
+            projects.forEach(project => {
+                const option = document.createElement("option");
+                option.value = project.id;
+                option.textContent = `${project.title || "Без названия"} (ID: ${project.id})`;
+                imageProjectSelect.appendChild(option);
+            });
+
+            if (projects.some(project => String(project.id) === previousProjectId)) {
+                imageProjectSelect.value = previousProjectId;
+            }
+
             projectList.replaceChildren();
 
             if (projects.length === 0) {
@@ -142,6 +183,10 @@
                     ? `Площадь: ${project.area} м²`
                     : "Площадь не указана";
 
+                const style = document.createElement("p");
+                style.textContent = project.style
+                    ? `Стиль: ${project.style}`
+                    : "Стиль не указан";
 
                 const editButton = document.createElement("button");
                 editButton.type = "button";
@@ -215,7 +260,7 @@
                     }
                 });
 
-                card.append(title, description, area, editButton, deleteButton);
+                card.append(title, description, area, style, editButton, deleteButton);
                 projectList.appendChild(card);
             });
 
@@ -345,6 +390,189 @@
             editMessage.textContent = error.message;
         }
     });
+
+
+    const imageUploadForm = document.getElementById("image-upload-form");
+
+    imageUploadForm.addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        const projectId = document.getElementById("image-project-id").value;
+        const files = document.getElementById("project-images").files;
+        const startOrder = Number(
+            document.getElementById("image-display-order").value
+        );
+        const message = document.getElementById("image-upload-message");
+
+        if (!projectId || files.length === 0) {
+            message.textContent = "Выбери проект и хотя бы одно изображение.";
+            return;
+        }
+
+        if (!Number.isInteger(startOrder) || startOrder < 1) {
+            message.textContent = "Начальный порядок должен быть не меньше 1.";
+            return;
+        }
+
+        const submitButton = imageUploadForm.querySelector(
+            'button[type="submit"]'
+        );
+
+        submitButton.disabled = true;
+        message.textContent = "Загрузка изображений...";
+
+        try {
+            const csrfResponse = await fetch("/csrf");
+
+            if (!csrfResponse.ok) {
+                throw new Error("Не удалось получить CSRF-токен.");
+            }
+
+            const csrf = await csrfResponse.json();
+
+            for (let i = 0; i < files.length; i++) {
+                const formData = new FormData();
+                formData.append("file", files[i]);
+                formData.append("displayOrder", String(startOrder + i));
+
+                const response = await fetch(
+                    `/api/projects/${projectId}/images/upload`,
+                    {
+                        method: "POST",
+                        headers: {
+                            [csrf.headerName]: csrf.token
+                        },
+                        body: formData
+                    }
+                );
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(
+                        `Файл ${files[i].name}: ${errorText || response.status}`
+                    );
+                }
+            }
+
+            message.textContent = "Изображения успешно загружены!";
+            imageUploadForm.reset();
+
+            if (typeof loadProjects === "function") {
+                await loadProjects();
+            }
+
+            await loadUploadedImages(projectId);
+
+        } catch (error) {
+            message.textContent = "Ошибка загрузки: " + error.message;
+        } finally {
+            submitButton.disabled = false;
+        }
+    });
+
+    async function loadUploadedImages(projectId) {
+        const container = document.getElementById("uploaded-images");
+        container.replaceChildren();
+
+        if (!projectId) {
+            return;
+        }
+
+        const response = await fetch(`/api/projects/${projectId}/images`);
+
+        if (!response.ok) {
+            container.textContent = "Не удалось загрузить список изображений.";
+            return;
+        }
+
+        const images = await response.json();
+
+        if (images.length === 0) {
+            container.textContent = "У этого проекта пока нет изображений.";
+            return;
+        }
+
+        images.forEach(image => {
+            const card = document.createElement("div");
+            card.className = "project";
+
+            const preview = document.createElement("img");
+            preview.src = image.imageUrl;
+            preview.alt = "Изображение проекта";
+            preview.style.width = "100%";
+            preview.style.maxWidth = "300px";
+            preview.style.height = "180px";
+            preview.style.objectFit = "contain";
+
+            const order = document.createElement("p");
+            order.textContent = `Порядок: ${image.displayOrder}`;
+
+
+            const link = document.createElement("a");
+            link.href = image.imageUrl;
+            link.target = "_blank";
+            link.rel = "noopener noreferrer";
+            link.textContent = "Открыть изображение";
+
+            const deleteButton = document.createElement("button");
+            deleteButton.type = "button";
+            deleteButton.textContent = "Удалить изображение";
+
+            deleteButton.addEventListener("click", async function () {
+                const confirmed = confirm(
+                    "Точно удалить это изображение? Восстановить его будет нельзя."
+                );
+
+                if (!confirmed) {
+                    return;
+                }
+
+                deleteButton.disabled = true;
+
+                try {
+                    const csrfResponse = await fetch("/csrf");
+
+                    if (!csrfResponse.ok) {
+                        throw new Error("Не удалось получить CSRF-токен.");
+                    }
+
+                    const csrf = await csrfResponse.json();
+
+                    const response = await fetch(
+                        `/api/projects/${projectId}/images/${image.id}`,
+                        {
+                            method: "DELETE",
+                            headers: {
+                                [csrf.headerName]: csrf.token
+                            }
+                        }
+                    );
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(errorText || `Ошибка ${response.status}`);
+                    }
+
+                    await loadUploadedImages(projectId);
+
+                } catch (error) {
+                    alert("Не удалось удалить изображение: " + error.message);
+                    deleteButton.disabled = false;
+                }
+            });
+
+            card.append(preview, order, link, deleteButton);
+            container.append(card);
+
+        });
+    }
+
+    document.getElementById("image-project-id").addEventListener(
+        "change",
+        async function () {
+            await loadUploadedImages(this.value);
+        }
+    );
 
 </script>
 </body>

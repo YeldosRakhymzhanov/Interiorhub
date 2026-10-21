@@ -7,6 +7,10 @@ import com.interiorhub.service.ProjectImageService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import com.interiorhub.service.ImageStorageService;
+import org.springframework.http.MediaType;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
@@ -15,10 +19,37 @@ import java.util.List;
 public class ProjectImageController {
 
     private final ProjectImageService imageService;
+    private final ImageStorageService imageStorageService;
 
-    public ProjectImageController(ProjectImageService imageService) {
+    public ProjectImageController(
+            ProjectImageService imageService,
+            ImageStorageService imageStorageService) {
         this.imageService = imageService;
+        this.imageStorageService = imageStorageService;
     }
+
+
+
+    @PostMapping(
+            value = "/upload",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    @ResponseStatus(HttpStatus.CREATED)
+    public ProjectImageResponse uploadImage(
+            @PathVariable Long projectId,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "displayOrder", required = false)
+            Integer displayOrder) {
+
+        String imageUrl = imageStorageService.store(file);
+
+        return imageService.addImage(
+                projectId,
+                imageUrl,
+                displayOrder
+        );
+    }
+
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)

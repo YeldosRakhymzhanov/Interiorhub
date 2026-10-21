@@ -1,4 +1,3 @@
-
 package com.interiorhub.service;
 
 import com.interiorhub.dto.ProjectImageResponse;
@@ -17,12 +16,15 @@ public class ProjectImageService {
 
     private final ProjectImageRepository imageRepository;
     private final ProjectRepository projectRepository;
+    private final ImageStorageService imageStorageService;
 
     public ProjectImageService(
             ProjectImageRepository imageRepository,
-            ProjectRepository projectRepository) {
+            ProjectRepository projectRepository,
+            ImageStorageService imageStorageService) {
         this.imageRepository = imageRepository;
         this.projectRepository = projectRepository;
+        this.imageStorageService = imageStorageService;
     }
 
     @Transactional
@@ -67,13 +69,15 @@ public class ProjectImageService {
     public void deleteImage(Long projectId, Long imageId) {
         ProjectImage image = imageRepository.findById(imageId)
                 .orElseThrow(() ->
-                        new IllegalArgumentException("Image not found: " + imageId));
+                        new IllegalArgumentException(
+                                "Image not found: " + imageId));
 
         if (!image.getProject().getId().equals(projectId)) {
             throw new IllegalArgumentException(
                     "Image does not belong to project: " + projectId);
         }
 
+        imageStorageService.delete(image.getImageUrl());
         imageRepository.delete(image);
     }
 
