@@ -507,6 +507,15 @@
             const order = document.createElement("p");
             order.textContent = `Порядок: ${image.displayOrder}`;
 
+            const orderInput = document.createElement("input");
+            orderInput.type = "number";
+            orderInput.min = "1";
+            orderInput.value = image.displayOrder;
+            orderInput.setAttribute("aria-label", "Порядок изображения");
+
+            const saveOrderButton = document.createElement("button");
+            saveOrderButton.type = "button";
+            saveOrderButton.textContent = "Сохранить порядок";
 
             const link = document.createElement("a");
             link.href = image.imageUrl;
@@ -517,6 +526,54 @@
             const deleteButton = document.createElement("button");
             deleteButton.type = "button";
             deleteButton.textContent = "Удалить изображение";
+
+
+            saveOrderButton.addEventListener("click", async function () {
+                const newOrder = Number(orderInput.value);
+
+                if (!Number.isInteger(newOrder) || newOrder < 1) {
+                    alert("Порядок должен быть целым числом не меньше 1.");
+                    return;
+                }
+
+                saveOrderButton.disabled = true;
+
+                try {
+                    const csrfResponse = await fetch("/csrf");
+
+                    if (!csrfResponse.ok) {
+                        throw new Error("Не удалось получить CSRF-токен.");
+                    }
+
+                    const csrf = await csrfResponse.json();
+
+                    const response = await fetch(
+                        `/api/projects/${projectId}/images/${image.id}/order`,
+                        {
+                            method: "PATCH",
+                            headers: {
+                                "Content-Type": "application/json",
+                                [csrf.headerName]: csrf.token
+                            },
+                            body: JSON.stringify({
+                                displayOrder: newOrder
+                            })
+                        }
+                    );
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(errorText || `Ошибка ${response.status}`);
+                    }
+
+                    await loadUploadedImages(projectId);
+
+                } catch (error) {
+                    alert("Не удалось сохранить порядок: " + error.message);
+                } finally {
+                    saveOrderButton.disabled = false;
+                }
+            });
 
             deleteButton.addEventListener("click", async function () {
                 const confirmed = confirm(
@@ -561,7 +618,14 @@
                 }
             });
 
-            card.append(preview, order, link, deleteButton);
+            card.append(
+                preview,
+                order,
+                orderInput,
+                saveOrderButton,
+                link,
+                deleteButton
+            );
             container.append(card);
 
         });

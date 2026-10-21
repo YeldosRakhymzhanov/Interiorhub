@@ -23,7 +23,7 @@ const translations = {
         startProject: "Start a project ↗",
         contactEyebrow: "HAVE A PROJECT IN MIND?",
         contactTitle: "Let's create something<br><em>meaningful.</em>",
-        getInTouch: "Get in touch",
+        whatsappButton: "Chat on WhatsApp",
         footerTagline: "Thoughtful spaces. Timeless living.",
         noProjects: "Projects will be added soon.",
         loadError: "Unable to load projects. Please try again later.",
@@ -52,7 +52,7 @@ const translations = {
         startProject: "Обсудить проект ↗",
         contactEyebrow: "ЕСТЬ ИДЕЯ ДЛЯ ПРОЕКТА?",
         contactTitle: "Давайте создадим<br><em>что-то особенное.</em>",
-        getInTouch: "Связаться с нами",
+        whatsappButton: "Написать в WhatsApp",
         footerTagline: "Продуманные пространства. Вневременной стиль.",
         noProjects: "Скоро здесь появятся проекты.",
         loadError: "Не удалось загрузить проекты. Попробуйте позже.",
@@ -81,7 +81,7 @@ const translations = {
         startProject: "Жобаны бастау ↗",
         contactEyebrow: "ЖОБАҢЫЗ БАР МА?",
         contactTitle: "Бірге<br><em>ерекше дүние жасайық.</em>",
-        getInTouch: "Бізбен байланысу",
+        whatsappButton: "WhatsApp арқылы жазу",
         footerTagline: "Ойластырылған кеңістік. Мәңгілік стиль.",
         noProjects: "Жобалар жақында қосылады.",
         loadError: "Жобаларды жүктеу мүмкін болмады. Кейінірек көріңіз.",
@@ -358,7 +358,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.querySelector(".contact .eyebrow").dataset.i18n = "contactEyebrow";
     document.querySelector(".contact h2").dataset.i18n = "contactTitle";
-    document.querySelector(".contact .primary-button").dataset.i18n = "getInTouch";
+    document.querySelector(".contact .primary-button").dataset.i18n = "whatsappButton";
     document.querySelector(".footer > p:nth-of-type(1)").dataset.i18n = "footerTagline";
     document.querySelector(".header-contact").dataset.i18n = "contactButton";
 
