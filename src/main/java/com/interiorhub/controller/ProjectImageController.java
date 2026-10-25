@@ -85,7 +85,6 @@ public class ProjectImageController {
         imageService.deleteImage(projectId, imageId);
     }
 
-
     @PatchMapping("/{imageId}/order")
     public ProjectImageResponse updateImageOrder(
             @PathVariable Long projectId,
@@ -98,5 +97,19 @@ public class ProjectImageController {
                 request.get("displayOrder")
         );
     }
+
+    @PatchMapping("/{imageId}/title")
+    public ProjectImageResponse updateImageTitle(
+            @PathVariable Long projectId,
+            @PathVariable Long imageId,
+            @RequestBody java.util.Map<String, String> request) {
+
+        return imageService.updateImageTitle(
+                projectId,
+                imageId,
+                request.get("title")
+        );
+    }
+
 
 }

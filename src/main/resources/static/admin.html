@@ -545,9 +545,15 @@
             const order = document.createElement("p");
             order.textContent = `Порядок: ${image.displayOrder}`;
 
-            const title = document.createElement("p");
-            title.textContent = `Название: ${image.title || "Без названия"}`;
-            console.log("Название изображения:", image.title);
+            const titleLabel = document.createElement("label");
+            titleLabel.textContent = "Название изображения:";
+
+            const titleInput = document.createElement("input");
+            titleInput.type = "text";
+            titleInput.value = image.title || "";
+            titleInput.maxLength = 200;
+            titleInput.placeholder = "Например, План освещения";
+            titleInput.setAttribute("aria-label", "Название изображения");
 
             const orderInput = document.createElement("input");
             orderInput.type = "number";
@@ -558,6 +564,10 @@
             const saveOrderButton = document.createElement("button");
             saveOrderButton.type = "button";
             saveOrderButton.textContent = "Сохранить порядок";
+
+            const saveTitleButton = document.createElement("button");
+            saveTitleButton.type = "button";
+            saveTitleButton.textContent = "Сохранить название";
 
             const link = document.createElement("a");
             link.href = image.imageUrl;
@@ -617,6 +627,54 @@
                 }
             });
 
+            saveTitleButton.addEventListener("click", async function () {
+                const newTitle = titleInput.value.trim();
+
+                if (newTitle.length > 200) {
+                    alert("Название не должно превышать 200 символов.");
+                    return;
+                }
+
+                saveTitleButton.disabled = true;
+
+                try {
+                    const csrfResponse = await fetch("/csrf");
+
+                    if (!csrfResponse.ok) {
+                        throw new Error("Не удалось получить CSRF-токен.");
+                    }
+
+                    const csrf = await csrfResponse.json();
+
+                    const response = await fetch(
+                        `/api/projects/${projectId}/images/${image.id}/title`,
+                        {
+                            method: "PATCH",
+                            headers: {
+                                "Content-Type": "application/json",
+                                [csrf.headerName]: csrf.token
+                            },
+                            body: JSON.stringify({
+                                title: newTitle
+                            })
+                        }
+                    );
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(errorText || `Ошибка ${response.status}`);
+                    }
+
+                    await loadUploadedImages(projectId);
+                    alert("Название сохранено.");
+
+                } catch (error) {
+                    alert("Не удалось сохранить название: " + error.message);
+                } finally {
+                    saveTitleButton.disabled = false;
+                }
+            });
+
             deleteButton.addEventListener("click", async function () {
                 const confirmed = confirm(
                     "Точно удалить это изображение? Восстановить его будет нельзя."
@@ -662,13 +720,16 @@
 
             card.append(
                 preview,
-                title,
+                titleLabel,
+                titleInput,
+                saveTitleButton,
                 order,
                 orderInput,
                 saveOrderButton,
                 link,
                 deleteButton
             );
+
             container.append(card);
 
         });

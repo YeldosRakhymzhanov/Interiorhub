@@ -114,6 +114,33 @@ public class ProjectImageService {
         return toResponse(updatedImage);
     }
 
+    @Transactional
+    public ProjectImageResponse updateImageTitle(
+            Long projectId, Long imageId, String title) {
+
+        ProjectImage image = imageRepository.findById(imageId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Image not found: " + imageId));
+
+        if (!image.getProject().getId().equals(projectId)) {
+            throw new IllegalArgumentException(
+                    "Image does not belong to project: " + projectId);
+        }
+
+        if (title != null && title.length() > 200) {
+            throw new IllegalArgumentException(
+                    "Image title must not exceed 200 characters");
+        }
+
+        image.setTitle(title == null ? "" : title.trim());
+
+        ProjectImage updatedImage = imageRepository.save(image);
+
+        return toResponse(updatedImage);
+    }
+
+
     private ProjectImageResponse toResponse(ProjectImage image) {
         ProjectImageResponse response = new ProjectImageResponse();
         response.setId(image.getId());
