@@ -7,6 +7,7 @@ public class ProjectImageResponse {
     private Long projectId;
     private String imageUrl;
     private Integer displayOrder;
+    private String title;
 
     public ProjectImageResponse() {
     }
@@ -42,4 +43,8 @@ public class ProjectImageResponse {
     public void setDisplayOrder(Integer displayOrder) {
         this.displayOrder = displayOrder;
     }
+
+    public String getTitle() { return title;    }
+
+    public void setTitle(String title) {        this.title = title;    }
 }

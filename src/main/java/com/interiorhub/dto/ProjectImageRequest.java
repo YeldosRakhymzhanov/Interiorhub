@@ -11,6 +11,8 @@ public class ProjectImageRequest {
     private String imageUrl;
 
     private Integer displayOrder;
+    @Size(max = 200, message = "Image title must not exceed 200 characters")
+    private String title;
 
     public ProjectImageRequest() {
     }
@@ -29,5 +31,13 @@ public class ProjectImageRequest {
 
     public void setDisplayOrder(Integer displayOrder) {
         this.displayOrder = displayOrder;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 }

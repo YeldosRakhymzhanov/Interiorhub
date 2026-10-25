@@ -106,6 +106,8 @@
             >
         </p>
 
+        <div id="image-titles-container"></div>
+
         <p>
             <label for="image-display-order">Начальный порядок</label>
             <input
@@ -394,6 +396,37 @@
 
     const imageUploadForm = document.getElementById("image-upload-form");
 
+
+    const projectImagesInput = document.getElementById("project-images");
+    const imageTitlesContainer = document.getElementById("image-titles-container");
+
+    projectImagesInput.addEventListener("change", function () {
+        imageTitlesContainer.replaceChildren();
+
+        const files = projectImagesInput.files;
+
+        for (let i = 0; i < files.length; i++) {
+            const field = document.createElement("p");
+
+            const label = document.createElement("label");
+            label.textContent = `Название изображения: ${files[i].name}`;
+
+            const input = document.createElement("input");
+            input.type = "text";
+            input.className = "image-title-input";
+            input.maxLength = 200;
+            input.placeholder = "Например, План освещения";
+            input.value = files[i].name.replace(/\.[^.]+$/, "");
+
+            label.htmlFor = `image-title-${i}`;
+            input.id = `image-title-${i}`;
+
+            field.append(label, input);
+            imageTitlesContainer.appendChild(field);
+        }
+    });
+
+
     imageUploadForm.addEventListener("submit", async function (event) {
         event.preventDefault();
 
@@ -434,6 +467,11 @@
                 const formData = new FormData();
                 formData.append("file", files[i]);
                 formData.append("displayOrder", String(startOrder + i));
+
+                const titleInput = document.getElementById(`image-title-${i}`);
+                const title = titleInput ? titleInput.value.trim() : "";
+
+                formData.append("title", title);
 
                 const response = await fetch(
                     `/api/projects/${projectId}/images/upload`,
@@ -506,6 +544,10 @@
 
             const order = document.createElement("p");
             order.textContent = `Порядок: ${image.displayOrder}`;
+
+            const title = document.createElement("p");
+            title.textContent = `Название: ${image.title || "Без названия"}`;
+            console.log("Название изображения:", image.title);
 
             const orderInput = document.createElement("input");
             orderInput.type = "number";
@@ -620,6 +662,7 @@
 
             card.append(
                 preview,
+                title,
                 order,
                 orderInput,
                 saveOrderButton,

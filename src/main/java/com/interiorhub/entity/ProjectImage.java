@@ -18,6 +18,8 @@ public class ProjectImage {
     private String imageUrl;
 
     private Integer displayOrder;
+    @Column(length = 200)
+    private String title;
 
     public ProjectImage() {
     }
@@ -53,4 +55,8 @@ public class ProjectImage {
     public void setDisplayOrder(Integer displayOrder) {
         this.displayOrder = displayOrder;
     }
+
+    public String getTitle() { return title; }
+
+    public void setTitle(String title) { this.title = title;  }
 }

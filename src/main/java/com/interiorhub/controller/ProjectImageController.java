@@ -39,14 +39,17 @@ public class ProjectImageController {
             @PathVariable Long projectId,
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "displayOrder", required = false)
-            Integer displayOrder) {
+            Integer displayOrder,
+            @RequestParam(value = "title", required = false)
+            String title) {
 
         String imageUrl = imageStorageService.store(file);
 
         return imageService.addImage(
                 projectId,
                 imageUrl,
-                displayOrder
+                displayOrder,
+                title
         );
     }
 
@@ -60,7 +63,8 @@ public class ProjectImageController {
         return imageService.addImage(
                 projectId,
                 request.getImageUrl(),
-                request.getDisplayOrder()
+                request.getDisplayOrder(),
+                request.getTitle()
         );
     }
 

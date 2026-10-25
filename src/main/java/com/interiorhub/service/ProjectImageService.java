@@ -27,9 +27,13 @@ public class ProjectImageService {
         this.imageStorageService = imageStorageService;
     }
 
+
     @Transactional
     public ProjectImageResponse addImage(
-            Long projectId, String imageUrl, Integer displayOrder) {
+            Long projectId,
+            String imageUrl,
+            Integer displayOrder,
+            String title) {
 
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new ProjectNotFoundException(projectId));
@@ -37,6 +41,7 @@ public class ProjectImageService {
         ProjectImage image = new ProjectImage();
         image.setProject(project);
         image.setImageUrl(imageUrl);
+        image.setTitle(title);
 
         if (displayOrder == null) {
             displayOrder = imageRepository
@@ -49,6 +54,7 @@ public class ProjectImageService {
         ProjectImage savedImage = imageRepository.save(image);
         return toResponse(savedImage);
     }
+
 
     @Transactional(readOnly = true)
     public List<ProjectImageResponse> getImages(Long projectId) {
@@ -113,6 +119,7 @@ public class ProjectImageService {
         response.setId(image.getId());
         response.setProjectId(image.getProject().getId());
         response.setImageUrl(image.getImageUrl());
+        response.setTitle(image.getTitle());
         response.setDisplayOrder(image.getDisplayOrder());
         return response;
     }

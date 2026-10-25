@@ -211,12 +211,30 @@ async function loadProjectImages(projectId, gallery) {
 
         images.sort((a, b) => a.displayOrder - b.displayOrder);
 
-        const planTitles = [
-            "Обмерный план",
-            "Планировочное решение",
-            "План освещения",
-            "План электрики"
-        ];
+
+        const planTitles = {
+            ru: [
+                "Обмерный план",
+                "Планировочное решение",
+                "План освещения",
+                "План электрики"
+            ],
+            en: [
+                "Measurement Plan",
+                "Layout Plan",
+                "Lighting Plan",
+                "Electrical Plan"
+            ],
+            kk: [
+                "Өлшем жоспары",
+                "Жоспарлау шешімі",
+                "Жарықтандыру жоспары",
+                "Электр жоспары"
+            ]
+        };
+
+        const titles = planTitles[currentLanguage] || planTitles.ru;
+
 
         images.forEach((item, index) => {
             const card = document.createElement("div");
@@ -224,7 +242,7 @@ async function loadProjectImages(projectId, gallery) {
 
             const image = document.createElement("img");
             image.src = item.imageUrl;
-            image.alt = planTitles[index] || `Чертёж ${index + 1}`;
+            image.alt = titles[index] || `Drawing ${index + 1}`;
             image.loading = "lazy";
 
             image.addEventListener("click", () => {
@@ -238,7 +256,7 @@ async function loadProjectImages(projectId, gallery) {
             const caption = document.createElement("p");
             caption.className = "project-gallery-caption";
             caption.textContent =
-                planTitles[index] || `Чертёж ${index + 1}`;
+                item.title?.trim() || titles[index] || `Drawing ${index + 1}`;
 
             card.appendChild(image);
             card.appendChild(caption);
