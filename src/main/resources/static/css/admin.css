@@ -22,10 +22,10 @@
 body {
     max-width: 1100px;
     margin: 0 auto;
-    padding: 44px 28px 64px;
+    padding: 48px 32px 72px;
     background: var(--bg);
     color: var(--text);
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: "DM Sans", sans-serif;
     font-size: 15px;
     line-height: 1.6;
 }
@@ -39,13 +39,18 @@ h3 {
 
 h1 {
     margin: 0 0 10px;
-    font-size: clamp(28px, 4vw, 38px);
-    letter-spacing: -1px;
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: clamp(30px, 4vw, 40px);
+    font-weight: 500;
+    letter-spacing: -0.7px;
 }
 
 h2 {
     margin: 34px 0 18px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e5ddd2;
     font-size: 23px;
+    font-weight: 500;
     letter-spacing: -0.4px;
 }
 
@@ -81,13 +86,22 @@ label {
     font-weight: 600;
 }
 
+#uploaded-images label {
+    display: block;
+    margin-top: 8px;
+    margin-bottom: 6px;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 500;
+}
+
 input:not([type="hidden"]),
 textarea {
     display: block;
     width: 100%;
     padding: 12px 14px;
-    border: 1px solid #dcd5ca;
-    border-radius: 9px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
     background: #fff;
     color: var(--text);
     font: inherit;
@@ -114,7 +128,6 @@ button {
     margin: 4px 8px 4px 0;
     padding: 10px 17px;
     border: 1px solid var(--accent);
-    border-radius: 9px;
     background: var(--accent);
     color: #fff;
     font: inherit;
@@ -122,6 +135,8 @@ button {
     cursor: pointer;
     transition: background 0.2s, border-color 0.2s,
     transform 0.2s, opacity 0.2s;
+    border-radius: 12px;
+    box-shadow: 0 2px 5px rgba(44, 38, 29, 0.08);
 }
 
 button:hover {
@@ -267,12 +282,22 @@ button:focus-visible {
 }
 
 #uploaded-images .project {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
     min-width: 0;
-    padding: 16px;
-    background: #fff;
-    border: 1px solid #e8e1d8;
-    border-radius: 12px;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
+    padding: 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+#uploaded-images .project:hover {
+    border-color: #cfc3b3;
+    box-shadow: 0 10px 26px rgba(44, 38, 29, 0.08);
+    transform: translateY(-2px);
 }
 
 #uploaded-images img {
@@ -282,6 +307,7 @@ button:focus-visible {
     object-fit: contain;
     background: #f7f5f1;
     border-radius: 8px;
+    margin-bottom: 14px;
 }
 
 #uploaded-images input[type="number"] {
@@ -296,9 +322,42 @@ button:focus-visible {
 #uploaded-images button {
     width: 100%;
     margin: 5px 0;
+    padding: 8px 12px;
 }
 
 #uploaded-images a {
     display: inline-block;
     margin: 8px 0;
+}
+
+
+/* Верхняя панель админки */
+.admin-topbar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.admin-topbar form {
+    margin: 0;
+}
+
+.logout-button {
+    width: auto;
+    padding: 9px 18px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: none;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.logout-button:hover {
+    background: var(--surface-soft);
+    border-color: #cfc3b3;
 }

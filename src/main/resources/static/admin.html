@@ -8,8 +8,17 @@
     <link rel="stylesheet" href="/css/admin.css">
 </head>
 
+
 <body>
+<div class="admin-topbar">
+    <form action="/logout" method="post" id="logout-form">
+        <input type="hidden" name="_csrf" id="logout-csrf">
+        <button type="submit" class="logout-button">Выйти</button>
+    </form>
+</div>
+
 <h1>InteriorHub — Админ-панель</h1>
+
 <p>Управление проектами интерьера</p>
 
 <h2>Добавить проект</h2>
@@ -509,6 +518,7 @@
     });
 
     async function loadUploadedImages(projectId) {
+
         const container = document.getElementById("uploaded-images");
         container.replaceChildren();
 
@@ -743,5 +753,32 @@
     );
 
 </script>
+
+
+<script>
+    async function setupLogoutForm() {
+        const form = document.getElementById("logout-form");
+        const csrfInput = document.getElementById("logout-csrf");
+
+        try {
+            const response = await fetch("/csrf");
+
+            if (!response.ok) {
+                throw new Error("Не удалось получить CSRF-токен");
+            }
+
+            const csrf = await response.json();
+
+            csrfInput.name = csrf.parameterName;
+            csrfInput.value = csrf.token;
+        } catch (error) {
+            console.error("Ошибка настройки выхода:", error);
+            form.querySelector("button").disabled = true;
+        }
+    }
+
+    setupLogoutForm();
+</script>
+
 </body>
 </html>

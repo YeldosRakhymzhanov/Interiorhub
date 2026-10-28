@@ -9,6 +9,8 @@ import com.interiorhub.exception.ProjectNotFoundException;
 import com.interiorhub.repository.ProjectTranslationRepository;
 import com.interiorhub.repository.ProjectImageRepository;
 import org.springframework.transaction.annotation.Transactional;
+import com.interiorhub.entity.ProjectImage;
+import com.interiorhub.service.ImageStorageService;
 
 import java.util.List;
 
@@ -18,16 +20,21 @@ public class ProjectService {
     private final ProjectRepository projectRepository;
     private final ProjectTranslationRepository projectTranslationRepository;
     private final ProjectImageRepository projectImageRepository;
+    private final ImageStorageService imageStorageService;
+
 
     public ProjectService(
             ProjectRepository projectRepository,
             ProjectTranslationRepository projectTranslationRepository,
-            ProjectImageRepository projectImageRepository
+            ProjectImageRepository projectImageRepository,
+            ImageStorageService imageStorageService
     ) {
         this.projectRepository = projectRepository;
         this.projectTranslationRepository = projectTranslationRepository;
         this.projectImageRepository = projectImageRepository;
+        this.imageStorageService = imageStorageService;
     }
+
 
     public List<Project> getAllProjects() {
         return projectRepository.findAll();
@@ -104,6 +111,13 @@ public class ProjectService {
     public void deleteProject(Long id) {
         Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new ProjectNotFoundException(id));
+
+        List<ProjectImage> images =
+                projectImageRepository.findByProjectIdOrderByDisplayOrderAsc(id);
+
+        for (ProjectImage image : images) {
+            imageStorageService.delete(image.getImageUrl());
+        }
 
         projectTranslationRepository.deleteByProjectId(id);
         projectImageRepository.deleteByProjectId(id);

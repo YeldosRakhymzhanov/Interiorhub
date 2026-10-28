@@ -44,7 +44,7 @@ public class SecurityConfig {
 
                         .requestMatchers("/admin/login", "/csrf").permitAll()
 
-                        .requestMatchers("/admin", "/admin/**").authenticated()
+                        .requestMatchers("/admin", "/admin/**", "/admin.html").authenticated()
 
                         .requestMatchers("/api/**").authenticated()
 
@@ -54,6 +54,13 @@ public class SecurityConfig {
                         .loginPage("/admin/login")
                         .loginProcessingUrl("/admin/login")
                         .defaultSuccessUrl("/admin", true)
+                        .permitAll()
+                )
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/admin/login?logout")
+                        .invalidateHttpSession(true)
+                        .clearAuthentication(true)
                         .permitAll()
                 )
                 .httpBasic(Customizer.withDefaults());
